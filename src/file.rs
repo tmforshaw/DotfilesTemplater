@@ -1,5 +1,7 @@
+use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
+use std::ops::Range;
 
 use regex::Regex;
 
@@ -7,7 +9,22 @@ use crate::config::{CONFIG, FileConfig};
 use crate::errors::DotfilesError;
 use crate::functions::parse_config_functions;
 
-pub fn open_file<S: AsRef<str>>(path: S) -> String {
+#[derive(Debug, Clone)]
+pub(crate) struct MatchedText {
+    pub(crate) _range: Range<usize>,
+    pub(crate) text: String,
+}
+
+impl<'a> From<regex::Match<'a>> for MatchedText {
+    fn from(value: regex::Match) -> Self {
+        Self {
+            _range: value.range(),
+            text: value.as_str().to_string(),
+        }
+    }
+}
+
+pub(crate) fn open_file<S: AsRef<str>>(path: S) -> String {
     let mut config_file = File::open(path.as_ref()).unwrap();
     let mut contents = String::new();
 
@@ -16,8 +33,8 @@ pub fn open_file<S: AsRef<str>>(path: S) -> String {
     contents.trim().replace(" ", "").to_string()
 }
 
-pub fn modify_files() -> Result<(), DotfilesError> {
-    for file_config in Into::<Vec<FileConfig>>::into(CONFIG.files.clone()).iter() {
+pub(crate) fn modify_files() -> Result<(), DotfilesError> {
+    for file_config in Into::<Vec<FileConfig>>::into((*CONFIG).clone()?.files.clone()).iter() {
         let file = open_file(file_config.file.clone());
 
         // Find the parts which need to be replaced
@@ -25,13 +42,22 @@ pub fn modify_files() -> Result<(), DotfilesError> {
         let marker_regex =
             Regex::new(format!("(?m)(?<before>^.*){marker_regex_string}(?<after>.*)$").as_str())?;
 
-        for (_, [before, after]) in marker_regex
-            .captures_iter(file.as_str())
-            .map(|c| c.extract())
-        {
-            println!("{before}\n{after}");
+        for captures in marker_regex.captures_iter(file.as_str()) {
+            let Some(before) = captures.get(1) else {
+                return Err(DotfilesError::CaptureFail {
+                    captures: format!("{captures:?}"),
+                    index: 1,
+                });
+            };
 
-            parse_config_functions(before, after)?;
+            let Some(after) = captures.get(2) else {
+                return Err(DotfilesError::CaptureFail {
+                    captures: format!("{captures:?}"),
+                    index: 2,
+                });
+            };
+
+            parse_config_functions(before.into(), after.into())?;
         }
     }
 

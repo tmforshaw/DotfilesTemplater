@@ -3,28 +3,32 @@ use regex::Regex;
 
 use crate::config::FUNCTION_CHAR;
 use crate::errors::DotfilesError;
+use crate::file::MatchedText;
 
 lazy_static! {
-    pub static ref FUNCTION_REGEX: Result<Regex, DotfilesError> = {
+    pub(crate) static ref FUNCTION_REGEX: Result<Regex, DotfilesError> = {
         let regex = Regex::new(
             format!("{FUNCTION_CHAR}(?<name>\\w[\\w\\d]*)(?<args>\\([^\\)]*\\))").as_str(),
         )?;
         Ok(regex)
     };
-    pub static ref PATTERN_REGEX: Result<Regex, DotfilesError> = {
+    pub(crate) static ref PATTERN_REGEX: Result<Regex, DotfilesError> = {
         let regex = Regex::new(r"'[^']+'")?;
         Ok(regex)
     };
-    pub static ref STRING_OR_KEYWORD_REGEX: Result<Regex, DotfilesError> = {
+    pub(crate) static ref STRING_OR_KEYWORD_REGEX: Result<Regex, DotfilesError> = {
         let regex = Regex::new("(('|\")[^'\"]+('|\"))|(\\w[\\w\\d\\-_]*)")?;
         Ok(regex)
     };
 }
 
-pub fn parse_config_functions(before: &str, after: &str) -> Result<(), DotfilesError> {
+pub(crate) fn parse_config_functions(
+    before: MatchedText,
+    after: MatchedText,
+) -> Result<(), DotfilesError> {
     for (_, [name, args]) in (*FUNCTION_REGEX)
         .clone()?
-        .captures_iter(after)
+        .captures_iter(&after.text)
         .map(|c| c.extract())
     {
         let args = args
@@ -35,13 +39,13 @@ pub fn parse_config_functions(before: &str, after: &str) -> Result<(), DotfilesE
 
         println!("Name: {name}\tArgs: {args:?}");
 
-        parse_function(name, args, before)?;
+        parse_function(name, args, before.clone())?;
     }
 
     Ok(())
 }
 
-fn parse_function(name: &str, args: Vec<&str>, _text: &str) -> Result<(), DotfilesError> {
+fn parse_function(name: &str, args: Vec<&str>, _text: MatchedText) -> Result<(), DotfilesError> {
     let pattern_regex = (*PATTERN_REGEX).clone()?;
     let string_or_keyword_regex = (*STRING_OR_KEYWORD_REGEX).clone()?;
 
@@ -50,7 +54,6 @@ fn parse_function(name: &str, args: Vec<&str>, _text: &str) -> Result<(), Dotfil
         "replace" => {
             if args.len() == 2 {
                 if !pattern_regex.is_match(args[0]) {
-                    eprintln!("Argument 0 is not a pattern");
                     return Err(DotfilesError::RegexMatchError {
                         regex_str: pattern_regex.to_string(),
                         hay: args[0].to_string(),
@@ -58,14 +61,14 @@ fn parse_function(name: &str, args: Vec<&str>, _text: &str) -> Result<(), Dotfil
                 }
 
                 if !string_or_keyword_regex.is_match(args[1]) {
-                    eprintln!("Argument 1 is not a string/keyword");
                     return Err(DotfilesError::RegexMatchError {
                         regex_str: string_or_keyword_regex.to_string(),
                         hay: args[1].to_string(),
                     });
                 }
+
+                // Arguments have the correct form (as defined by the regex)
             } else {
-                eprintln!("'replace' function requires 2 arguments");
                 return Err(DotfilesError::ArgumentError {
                     name: name.to_string(),
                     needed: 2,

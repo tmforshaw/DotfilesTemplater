@@ -2,8 +2,8 @@ use crate::errors::DotfilesError;
 
 mod config;
 mod errors;
-pub mod file;
-pub mod functions;
+pub(crate) mod file;
+pub(crate) mod functions;
 
 fn main() -> Result<(), DotfilesError> {
     match file::modify_files() {
