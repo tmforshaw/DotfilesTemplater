@@ -111,7 +111,9 @@ pub fn run_function(
                 )?;
             }
         }
-        _ => {}
+        f => {
+            eprintln!("Function '{f}' does not exist");
+        }
     }
 
     Ok(())
