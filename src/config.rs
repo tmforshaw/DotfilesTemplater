@@ -8,7 +8,7 @@ pub const FUNCTION_CHAR: char = '@';
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    pub _background_colour: String,
+    pub background_colour: String,
     pub files: Vec<FileConfig>,
 }
 
