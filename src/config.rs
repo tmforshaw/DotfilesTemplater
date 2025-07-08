@@ -5,7 +5,7 @@ use crate::file::open_file;
 // use toml::Table;
 
 static CONFIG_PATH: &str = "/home/tmforshaw/.config/dotfile-templater/config.toml";
-const FUNCTION_CHAR: char = '@';
+pub const FUNCTION_CHAR: char = '@';
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
