@@ -3,7 +3,7 @@ use std::io::prelude::*;
 
 use regex::Regex;
 
-use crate::config::CONFIG;
+use crate::config::{CONFIG, FileConfig};
 use crate::errors::DotfilesError;
 use crate::functions::parse_config_functions;
 
@@ -17,7 +17,7 @@ pub fn open_file<S: AsRef<str>>(path: S) -> String {
 }
 
 pub fn modify_files() -> Result<(), DotfilesError> {
-    for file_config in CONFIG.files.iter() {
+    for file_config in Into::<Vec<FileConfig>>::into(CONFIG.files.clone()).iter() {
         let file = open_file(file_config.file.clone());
 
         // Find the parts which need to be replaced

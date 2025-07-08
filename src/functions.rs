@@ -41,7 +41,7 @@ pub fn parse_config_functions(before: &str, after: &str) -> Result<(), DotfilesE
     Ok(())
 }
 
-fn parse_function(name: &str, args: Vec<&str>, text: &str) -> Result<(), DotfilesError> {
+fn parse_function(name: &str, args: Vec<&str>, _text: &str) -> Result<(), DotfilesError> {
     let pattern_regex = (*PATTERN_REGEX).clone()?;
     let string_or_keyword_regex = (*STRING_OR_KEYWORD_REGEX).clone()?;
 
