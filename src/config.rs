@@ -17,8 +17,9 @@ pub const FUNCTION_CHAR: char = '@';
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
-    pub(crate) theme: String,
-    pub(crate) files: Vec<FileConfig>,
+    pub theme: String,
+    pub marker_repetition_num: usize,
+    pub files: Vec<FileConfig>,
 
     #[serde(default)]
     pub themes: Vec<HashMap<String, String>>,
@@ -35,8 +36,8 @@ impl Config {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct FileConfig {
-    pub(crate) file: String,
-    pub(crate) comment_char: char,
+    pub file: String,
+    pub comment_char: String,
 }
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(parse_config);

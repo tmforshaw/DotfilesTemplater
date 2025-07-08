@@ -12,8 +12,8 @@ use crate::functions::parse_and_run_function;
 
 #[derive(Debug, Clone)]
 pub struct MatchedText {
-    pub(crate) range: Range<usize>,
-    pub(crate) text: String,
+    pub range: Range<usize>,
+    pub text: String,
 }
 
 impl From<regex::Match<'_>> for MatchedText {
@@ -68,7 +68,10 @@ pub fn modify_files() -> Result<(), DotfilesError> {
         let file = open_file(path_str.as_str())?;
 
         // Find the parts which need to be replaced
-        let marker_regex_string = file_config.comment_char.to_string().repeat(3);
+        let marker_regex_string = file_config
+            .comment_char
+            .to_string()
+            .repeat(CONFIG.marker_repetition_num);
         let marker_regex = Regex::new(format!("(?m)(^.*){marker_regex_string}(.*)$").as_str())?;
 
         // Find the lines which have the marker on them, and split the line into actual code and template code
