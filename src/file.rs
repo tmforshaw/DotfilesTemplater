@@ -65,6 +65,8 @@ pub fn modify_files() -> Result<(), DotfilesError> {
             }
         };
 
+        println!("{path_str}");
+
         let file = open_file(path_str.as_str())?;
 
         // Find the parts which need to be replaced

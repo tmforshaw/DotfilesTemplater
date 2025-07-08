@@ -43,7 +43,7 @@ pub fn parse_and_run_function(
         .collect::<Vec<&str>>();
 
     // Print the function and its arguments (This will help to track what is happening)
-    println!("Name: {name}\tArgs: {args:?}\t\t\t{file_path}");
+    println!("\t{name}({})", args.join(", "));
 
     // Run the function on the specified file
     run_function(name, &args, file_path, actual_text)?;
@@ -157,7 +157,12 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
         });
     }
 
-    println!("{}    -->    {}", text.text, replace_text.text);
+    println!(
+        "\t\t{}:  {}  -->  {}",
+        text.text.trim(),
+        text_match.text,
+        replace_text.text
+    );
 
     // Replace the text in the file
     write_to_file(file_path, replace_text)?;
