@@ -1,6 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
+use crate::arguments::parse_argument;
 use crate::config::FUNCTION_CHAR;
 use crate::errors::DotfilesError;
 use crate::file::{MatchedText, open_file};
@@ -76,7 +77,7 @@ fn check_function_args(name: &str, args: Vec<&str>) -> Result<(), DotfilesError>
                     });
                 }
             } else {
-                return Err(DotfilesError::ArgumentError {
+                return Err(DotfilesError::FuncArgumentError {
                     name: name.to_string(),
                     needed: 2,
                     found: args.len(),
@@ -92,7 +93,7 @@ fn check_function_args(name: &str, args: Vec<&str>) -> Result<(), DotfilesError>
 }
 
 // This is called after parse_function has already checked if the args are correct
-pub fn run_function(
+pub(crate) fn run_function(
     name: &str,
     args: Vec<&str>,
     file_path: String,
@@ -132,7 +133,18 @@ pub fn run_function(
             println!(
                 "{:?}",
                 &file_text.chars().collect::<Vec<_>>()[range_to_replace]
-            )
+            );
+
+            let replace_text = parse_argument(args[1]);
+            println!("{replace_text}");
+
+            // TODO This is so that the file length and locations don't change (Should fix this issue at some point)
+            if text_match.range.len() != replace_text.len() {
+                return Err(DotfilesError::ReplaceTextDifferentLength {
+                    text_to_replace: text_match.text,
+                    replace_text,
+                });
+            }
         }
         "other" => {}
         _ => {}

@@ -1,5 +1,6 @@
 use crate::errors::DotfilesError;
 
+pub(crate) mod arguments;
 mod config;
 mod errors;
 pub(crate) mod file;

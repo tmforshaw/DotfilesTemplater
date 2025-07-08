@@ -15,10 +15,16 @@ pub(crate) enum DotfilesError {
     CaptureFail { captures: String, index: usize },
 
     #[error("Function '{name}' needs {needed} args, found {found}: {args:?}")]
-    ArgumentError {
+    FuncArgumentError {
         name: String,
         needed: usize,
         found: usize,
         args: Vec<String>,
+    },
+
+    #[error("Tried to replace text with different length string (Length: {}  -->  {}): '{text_to_replace}'    -->    '{replace_text}'", text_to_replace.len(), replace_text.len())]
+    ReplaceTextDifferentLength {
+        text_to_replace: String,
+        replace_text: String,
     },
 }
