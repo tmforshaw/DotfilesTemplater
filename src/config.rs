@@ -3,9 +3,15 @@ use std::{collections::HashMap, sync::LazyLock};
 
 use crate::{errors::DotfilesError, file::open_file};
 
-// TODO Figure out the config path from XDG_CONFIG_HOME
+const CONFIG_FILE_SUB_PATH: &str = "dotfile-templater/config.toml";
 
-static CONFIG_PATH: &str = "/home/tmforshaw/.config/dotfile-templater/config.toml";
+pub static XDG_CONFIG_PATH: LazyLock<String> = LazyLock::new(|| {
+    std::env::vars().collect::<HashMap<String, String>>()["XDG_CONFIG_HOME"].clone()
+});
+
+static CONFIG_FILE_PATH: LazyLock<String> =
+    LazyLock::new(|| format!("{}/{CONFIG_FILE_SUB_PATH}", *XDG_CONFIG_PATH));
+
 pub const FUNCTION_CHAR: char = '@';
 
 #[allow(dead_code)]
@@ -37,7 +43,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(parse_config);
 
 fn parse_config() -> Config {
     // Read the TOML config into a Config struct (Exit the program if the config cannot be parsed)
-    match open_file(CONFIG_PATH) {
+    match open_file(CONFIG_FILE_PATH.as_str()) {
         Ok(config) => match toml::from_str(config.as_str()) {
             Ok(config) => return config,
             Err(e) => {

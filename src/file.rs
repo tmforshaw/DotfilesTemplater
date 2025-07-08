@@ -2,10 +2,11 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
 use std::ops::Range;
+use std::path::Path;
 
 use regex::Regex;
 
-use crate::config::{CONFIG, FileConfig};
+use crate::config::{CONFIG, FileConfig, XDG_CONFIG_PATH};
 use crate::errors::DotfilesError;
 use crate::functions::parse_and_run_function;
 
@@ -54,7 +55,17 @@ pub fn write_to_file<S: AsRef<str>>(
 
 pub fn modify_files() -> Result<(), DotfilesError> {
     for file_config in &Into::<Vec<FileConfig>>::into(CONFIG.files.clone()) {
-        let file = open_file(file_config.file.clone())?;
+        // Allow file_path to be absolute, or relative to .config
+        let path_str = {
+            let p = Path::new(file_config.file.as_str());
+            if p.is_absolute() {
+                p.display().to_string()
+            } else {
+                format!("{}/{}", *XDG_CONFIG_PATH, p.display())
+            }
+        };
+
+        let file = open_file(path_str.as_str())?;
 
         // Find the parts which need to be replaced
         let marker_regex_string = file_config.comment_char.to_string().repeat(3);
@@ -77,11 +88,7 @@ pub fn modify_files() -> Result<(), DotfilesError> {
             };
 
             // Parse the template code, and modify the actual_text
-            parse_and_run_function(
-                file_config.file.to_string(),
-                template_text.into(),
-                actual_text.into(),
-            )?;
+            parse_and_run_function(path_str.clone(), template_text.into(), actual_text.into())?;
         }
     }
 
