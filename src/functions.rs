@@ -1,32 +1,31 @@
-use lazy_static::lazy_static;
 use regex::Regex;
+use std::sync::LazyLock;
 
 use crate::arguments::parse_argument;
 use crate::config::FUNCTION_CHAR;
 use crate::errors::DotfilesError;
 use crate::file::{MatchedText, write_to_file};
 
-lazy_static! {
-    pub(crate) static ref FUNCTION_REGEX: Result<Regex, DotfilesError> = Ok(Regex::new(
+pub static FUNCTION_REGEX: LazyLock<Result<Regex, DotfilesError>> = LazyLock::new(|| {
+    Ok(Regex::new(
         format!("{FUNCTION_CHAR}(?<name>\\w[\\w\\d]*)(?<args>\\([^\\)]*\\))").as_str(),
-    )?);
-    pub(crate) static ref PATTERN_REGEX: Result<Regex, DotfilesError> = Ok(Regex::new(r"'[^']+'")?);
-    pub(crate) static ref STRING_OR_KEYWORD_REGEX: Result<Regex, DotfilesError> =
-        Ok(Regex::new("('[^']+')|(\\w[\\w\\d\\-_]*)")?);
-}
+    )?)
+});
 
-pub(crate) fn parse_and_run_function(
+pub static PATTERN_REGEX: LazyLock<Result<Regex, DotfilesError>> =
+    LazyLock::new(|| Ok(Regex::new(r"'[^']+'")?));
+pub static STRING_OR_KEYWORD_REGEX: LazyLock<Result<Regex, DotfilesError>> =
+    LazyLock::new(|| Ok(Regex::new("('[^']+')|(\\w[\\w\\d\\-_]*)")?));
+
+pub fn parse_and_run_function(
     file_path: String,
     function_code_text: MatchedText,
     actual_text: MatchedText,
 ) -> Result<(), DotfilesError> {
     // Match the first function pattern // TODO Attempt to allow multiple functions on the same line
-    let Some(function_match) = (*FUNCTION_REGEX)
-        .clone()?
-        .captures(&function_code_text.text)
-    else {
+    let Some(function_match) = FUNCTION_REGEX.clone()?.captures(&function_code_text.text) else {
         return Err(DotfilesError::RegexMatchError {
-            regex_str: (*FUNCTION_REGEX).clone().unwrap().to_string(),
+            regex_str: FUNCTION_REGEX.clone()?.to_string(),
             hay: function_code_text.text,
         });
     };
@@ -39,21 +38,21 @@ pub(crate) fn parse_and_run_function(
         .trim_start_matches('(')
         .trim_end_matches(')')
         .split(',')
-        .map(|s| s.trim()) // Make sure the remove excess whitespace on the arguments
+        .map(str::trim) // Make sure the remove excess whitespace on the arguments
         .collect::<Vec<&str>>();
 
     // Print the function and its arguments (This will help to track what is happening)
     println!("Name: {name}\tArgs: {args:?}\t\t\t{file_path}");
 
     // Run the function on the specified file
-    run_function(name, args, file_path, actual_text)?;
+    run_function(name, &args, file_path, actual_text)?;
 
     Ok(())
 }
 
-pub(crate) fn run_function(
+pub fn run_function(
     name: &str,
-    args: Vec<&str>,
+    args: &[&str],
     file_path: String,
     text: MatchedText,
 ) -> Result<(), DotfilesError> {
@@ -103,7 +102,7 @@ pub(crate) fn run_function(
 // ---------------------------------- Code to perform each function call on the specified file -----------------------------------
 // -------------------------------------------------------------------------------------------------------------------------------
 
-fn replace_fn(file_path: String, args: Vec<&str>, text: MatchedText) -> Result<(), DotfilesError> {
+fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(), DotfilesError> {
     // Remove the surrounding apostrophes from the pattern
     let replace_pattern_regex = Regex::new(args[0].trim_matches('\''))?;
 

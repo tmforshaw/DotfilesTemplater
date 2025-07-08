@@ -1,30 +1,39 @@
-use lazy_static::lazy_static;
 use serde::Deserialize;
+use std::sync::LazyLock;
 
 use crate::{errors::DotfilesError, file::open_file};
 
 static CONFIG_PATH: &str = "/home/tmforshaw/.config/dotfile-templater/config.toml";
-pub(crate) const FUNCTION_CHAR: char = '@';
+pub const FUNCTION_CHAR: char = '@';
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, Clone)]
-pub(crate) struct Config {
+pub struct Config {
     pub(crate) background_colour: String,
     pub(crate) files: Vec<FileConfig>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub(crate) struct FileConfig {
+pub struct FileConfig {
     pub(crate) file: String,
     pub(crate) comment_char: char,
 }
 
-lazy_static! {
-    #[derive(Debug)]
-    pub(crate) static ref CONFIG: Result<Config, DotfilesError> = parse_config();
-}
+pub static CONFIG: LazyLock<Config> = LazyLock::new(parse_config);
 
-fn parse_config() -> Result<Config, DotfilesError> {
-    // Read the TOML config into a Config struct
-    Ok(toml::from_str(open_file(CONFIG_PATH).as_str())?)
+fn parse_config() -> Config {
+    // Read the TOML config into a Config struct (Exit the program if the config cannot be parsed)
+    match open_file(CONFIG_PATH) {
+        Ok(config) => match toml::from_str(config.as_str()) {
+            Ok(config) => config,
+            Err(e) => {
+                eprintln!("{}", Into::<DotfilesError>::into(e));
+                std::process::exit(0x1000)
+            }
+        },
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(0x1000)
+        }
+    }
 }

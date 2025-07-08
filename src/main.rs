@@ -1,3 +1,8 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use crate::errors::DotfilesError;
 
 pub(crate) mod arguments;
@@ -13,6 +18,6 @@ fn main() -> Result<(), DotfilesError> {
             eprintln!("{e}");
             Err(e)
         }
-        Ok(_) => Ok(()),
+        _ => Ok(()),
     }
 }

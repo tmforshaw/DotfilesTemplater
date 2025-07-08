@@ -1,9 +1,12 @@
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone)]
-pub(crate) enum DotfilesError {
+pub enum DotfilesError {
     #[error("TOML could not be read to string: {0}")]
     TomlReadError(#[from] toml::de::Error),
+
+    #[error("File could not be read: {0}")]
+    FileReadError(String),
 
     #[error("Regex failed to be created: {0}")]
     RegexFail(#[from] regex::Error),
@@ -27,4 +30,10 @@ pub(crate) enum DotfilesError {
         text_to_replace: String,
         replace_text: String,
     },
+}
+
+impl From<std::io::Error> for DotfilesError {
+    fn from(value: std::io::Error) -> Self {
+        Self::FileReadError(value.to_string())
+    }
 }

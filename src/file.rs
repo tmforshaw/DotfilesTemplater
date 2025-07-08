@@ -10,12 +10,12 @@ use crate::errors::DotfilesError;
 use crate::functions::parse_and_run_function;
 
 #[derive(Debug, Clone)]
-pub(crate) struct MatchedText {
+pub struct MatchedText {
     pub(crate) range: Range<usize>,
     pub(crate) text: String,
 }
 
-impl<'a> From<regex::Match<'a>> for MatchedText {
+impl From<regex::Match<'_>> for MatchedText {
     fn from(value: regex::Match) -> Self {
         Self {
             range: value.range(),
@@ -24,36 +24,37 @@ impl<'a> From<regex::Match<'a>> for MatchedText {
     }
 }
 
-pub(crate) fn open_file<S: AsRef<str>>(path: S) -> String {
+pub fn open_file<S: AsRef<str>>(path: S) -> Result<String, DotfilesError> {
     // Open file and copy contents
-    let mut config_file = File::open(path.as_ref()).unwrap();
+    let mut config_file = File::open(path.as_ref())?;
     let mut contents = String::new();
-    config_file.read_to_string(&mut contents).unwrap();
-    contents
+    config_file.read_to_string(&mut contents)?;
+
+    Ok(contents)
 }
 
-pub(crate) fn write_to_file<S: AsRef<str>>(
+pub fn write_to_file<S: AsRef<str>>(
     path: S,
     replace_text: MatchedText,
 ) -> Result<(), DotfilesError> {
     // Copy the file before modifications
-    let mut config_file = File::open(path.as_ref()).unwrap();
+    let mut config_file = File::open(path.as_ref())?;
     let mut contents = String::new();
-    config_file.read_to_string(&mut contents).unwrap();
+    config_file.read_to_string(&mut contents)?;
 
     // Replace the region with the new text
     contents.replace_range(replace_text.range, replace_text.text.as_str());
 
     // Write the changes to the file
-    let mut config_file = File::create(path.as_ref()).unwrap();
-    config_file.write_all(contents.as_bytes()).unwrap();
+    let mut config_file = File::create(path.as_ref())?;
+    config_file.write_all(contents.as_bytes())?;
 
     Ok(())
 }
 
-pub(crate) fn modify_files() -> Result<(), DotfilesError> {
-    for file_config in Into::<Vec<FileConfig>>::into((*CONFIG).clone()?.files.clone()).iter() {
-        let file = open_file(file_config.file.clone());
+pub fn modify_files() -> Result<(), DotfilesError> {
+    for file_config in &Into::<Vec<FileConfig>>::into(CONFIG.files.clone()) {
+        let file = open_file(file_config.file.clone())?;
 
         // Find the parts which need to be replaced
         let marker_regex_string = file_config.comment_char.to_string().repeat(3);
