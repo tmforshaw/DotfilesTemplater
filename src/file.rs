@@ -32,6 +32,29 @@ pub(crate) fn open_file<S: AsRef<str>>(path: S) -> String {
     contents
 }
 
+pub(crate) fn write_to_file<S: AsRef<str>>(
+    path: S,
+    replace_text: MatchedText,
+) -> Result<(), DotfilesError> {
+    let mut config_file = File::open(path.as_ref()).unwrap();
+    let mut contents = String::new();
+
+    config_file.read_to_string(&mut contents).unwrap();
+
+    println!(
+        "{:?}",
+        &contents.chars().collect::<Vec<_>>()[replace_text.range.clone()]
+    );
+
+    // let mut chars = contents.chars().collect::<Vec<_>>();
+    // chars[replace_text.range] = &replace_text.text.chars().collect::<Vec<_>>();
+
+    contents.replace_range(replace_text.range, replace_text.text.as_str());
+    println!("{contents}");
+
+    Ok(())
+}
+
 pub(crate) fn modify_files() -> Result<(), DotfilesError> {
     for file_config in Into::<Vec<FileConfig>>::into((*CONFIG).clone()?.files.clone()).iter() {
         let file = open_file(file_config.file.clone());

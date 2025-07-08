@@ -4,7 +4,7 @@ use regex::Regex;
 use crate::arguments::parse_argument;
 use crate::config::FUNCTION_CHAR;
 use crate::errors::DotfilesError;
-use crate::file::{MatchedText, open_file};
+use crate::file::{MatchedText, open_file, write_to_file};
 
 lazy_static! {
     pub(crate) static ref FUNCTION_REGEX: Result<Regex, DotfilesError> = {
@@ -100,13 +100,6 @@ pub(crate) fn run_function(
     file_path: String,
     text: MatchedText,
 ) -> Result<(), DotfilesError> {
-    let file_text = open_file(file_path);
-
-    // println!("{file_text}");
-    // println!("{text:?}");
-
-    // println!("{:?}", &file_text.chars().collect::<Vec<_>>()[text.range]);
-
     match name {
         "replace" => {
             let replace_regex = Regex::new(args[0].trim_matches('\''))?;
@@ -127,25 +120,24 @@ pub(crate) fn run_function(
 
             let text_match: MatchedText = text_match.into();
 
-            let range_to_replace = (text.range.start + text_match.range.start)
-                ..(text.range.start + text_match.range.end);
+            let replace_text = MatchedText {
+                range: (text.range.start + text_match.range.start)
+                    ..(text.range.start + text_match.range.end),
+                text: parse_argument(args[1]),
+            };
 
-            println!("{text_match:?}");
-            println!(
-                "{:?}",
-                &file_text.chars().collect::<Vec<_>>()[range_to_replace]
-            );
-
-            let replace_text = parse_argument(args[1]);
-            println!("{replace_text}");
+            // println!("{text_match:?}");
+            // println!("{}", replace_text.text);
 
             // TODO This is so that the file length and locations don't change (Should fix this issue at some point)
-            if text_match.range.len() != replace_text.len() {
+            if text_match.range.len() != replace_text.text.len() {
                 return Err(DotfilesError::ReplaceTextDifferentLength {
                     text_to_replace: text_match.text,
-                    replace_text,
+                    replace_text: replace_text.text,
                 });
             }
+
+            write_to_file(file_path, replace_text)?;
         }
         "other" => {}
         _ => {}
