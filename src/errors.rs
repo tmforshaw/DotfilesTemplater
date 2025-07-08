@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone)]
@@ -29,6 +31,15 @@ pub enum DotfilesError {
     ReplaceTextDifferentLength {
         text_to_replace: String,
         replace_text: String,
+    },
+
+    #[error("Theme '{name}' was not found in themes: {themes:?}")]
+    ThemeNotFound { name: String, themes: Vec<String> },
+
+    #[error("Argument '{arg}' not found in theme: {theme_hashmap:?}")]
+    ArgNotFound {
+        arg: String,
+        theme_hashmap: HashMap<String, String>,
     },
 }
 

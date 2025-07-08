@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::sync::LazyLock;
+use std::{collections::HashMap, sync::LazyLock};
 
 use crate::{errors::DotfilesError, file::open_file};
 
@@ -9,8 +9,20 @@ pub const FUNCTION_CHAR: char = '@';
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
-    pub(crate) background_colour: String,
+    pub(crate) theme: String,
     pub(crate) files: Vec<FileConfig>,
+
+    #[serde(default)]
+    pub themes: Vec<HashMap<String, String>>,
+}
+
+impl Config {
+    pub fn get_theme_hashmap(&self) -> HashMap<String, HashMap<String, String>> {
+        self.themes
+            .iter()
+            .map(|theme| (theme["name"].clone(), theme.clone()))
+            .collect()
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]

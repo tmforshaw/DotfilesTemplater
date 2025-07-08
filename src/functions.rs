@@ -8,14 +8,15 @@ use crate::file::{MatchedText, write_to_file};
 
 pub static FUNCTION_REGEX: LazyLock<Result<Regex, DotfilesError>> = LazyLock::new(|| {
     Ok(Regex::new(
-        format!("{FUNCTION_CHAR}(?<name>\\w[\\w\\d]*)(?<args>\\([^\\)]*\\))").as_str(),
+        format!("{FUNCTION_CHAR}(?<name>\\w[\\w\\d\\-_]*)(?<args>\\([^\\)]*\\))").as_str(),
     )?)
 });
-
 pub static PATTERN_REGEX: LazyLock<Result<Regex, DotfilesError>> =
     LazyLock::new(|| Ok(Regex::new(r"'[^']+'")?));
 pub static STRING_OR_KEYWORD_REGEX: LazyLock<Result<Regex, DotfilesError>> =
     LazyLock::new(|| Ok(Regex::new("('[^']+')|(\\w[\\w\\d\\-_]*)")?));
+pub static HEX_COLOUR_REGEX: LazyLock<Result<Regex, DotfilesError>> =
+    LazyLock::new(|| Ok(Regex::new("#[\\w\\d]{6}")?));
 
 pub fn parse_and_run_function(
     file_path: String,
@@ -92,6 +93,24 @@ pub fn run_function(
                 });
             }
         }
+        "replace-colour" => {
+            if args.len() == 1 {
+                // First argument is a keyword or string
+                if !string_or_keyword_regex.is_match(args[0]) {
+                    return Err(DotfilesError::RegexMatchError {
+                        regex_str: string_or_keyword_regex.to_string(),
+                        hay: args[0].to_string(),
+                    });
+                }
+
+                // Run the function
+                replace_fn(
+                    file_path,
+                    &[(HEX_COLOUR_REGEX.clone())?.as_str(), args[0]],
+                    text,
+                )?;
+            }
+        }
         _ => {}
     }
 
@@ -127,7 +146,7 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
     let replace_text = MatchedText {
         range: (text.range.start + text_match.range.start)
             ..(text.range.start + text_match.range.end),
-        text: parse_argument(args[1]),
+        text: parse_argument(args[1])?,
     };
 
     // TODO This is so that the file length and locations don't change (Should fix this issue at some point)
