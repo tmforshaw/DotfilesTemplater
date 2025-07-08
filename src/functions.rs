@@ -44,6 +44,7 @@ pub(crate) fn parse_and_run_function(
         .trim_start_matches('(')
         .trim_end_matches(')')
         .split(',')
+        .map(|s| s.trim())
         .collect::<Vec<&str>>();
 
     println!("Name: {name}\tArgs: {args:?}");

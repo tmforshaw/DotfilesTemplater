@@ -29,8 +29,7 @@ pub(crate) fn open_file<S: AsRef<str>>(path: S) -> String {
     let mut contents = String::new();
 
     config_file.read_to_string(&mut contents).unwrap();
-
-    contents.trim().replace(" ", "").to_string()
+    contents
 }
 
 pub(crate) fn modify_files() -> Result<(), DotfilesError> {
@@ -56,6 +55,8 @@ pub(crate) fn modify_files() -> Result<(), DotfilesError> {
                     index: 2,
                 });
             };
+
+            println!("{before:?}\t\t{after:?}");
 
             parse_and_run_function(file_config.file.to_string(), after.into(), before.into())?;
         }
