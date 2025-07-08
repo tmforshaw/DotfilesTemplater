@@ -14,10 +14,15 @@ static CONFIG_FILE_PATH: LazyLock<String> =
 
 pub const FUNCTION_CHAR: char = '@';
 
+const fn get_default_marker_repetition_num() -> usize {
+    3
+}
+
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
     pub theme: String,
+    #[serde(default = "get_default_marker_repetition_num")]
     pub marker_repetition_num: usize,
     pub files: Vec<FileConfig>,
 

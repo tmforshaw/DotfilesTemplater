@@ -157,6 +157,8 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
         });
     }
 
+    println!("{}    -->    {}", text.text, replace_text.text);
+
     // Replace the text in the file
     write_to_file(file_path, replace_text)?;
 
