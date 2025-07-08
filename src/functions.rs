@@ -93,7 +93,7 @@ pub fn run_function(
                 });
             }
         }
-        "replace-colour" => {
+        "replace-col" => {
             if args.len() == 1 {
                 // First argument is a keyword or string
                 if !string_or_keyword_regex.is_match(args[0]) {
