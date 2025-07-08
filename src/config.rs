@@ -37,15 +37,15 @@ fn parse_config() -> Config {
     // Read the TOML config into a Config struct (Exit the program if the config cannot be parsed)
     match open_file(CONFIG_PATH) {
         Ok(config) => match toml::from_str(config.as_str()) {
-            Ok(config) => config,
+            Ok(config) => return config,
             Err(e) => {
                 eprintln!("{}", Into::<DotfilesError>::into(e));
-                std::process::exit(0x1000)
             }
         },
         Err(e) => {
             eprintln!("{e}");
-            std::process::exit(0x1000)
         }
     }
+
+    std::process::exit(0x1000)
 }
