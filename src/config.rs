@@ -3,6 +3,8 @@ use std::{collections::HashMap, sync::LazyLock};
 
 use crate::{errors::DotfilesError, file::open_file};
 
+// TODO Figure out the config path from XDG_CONFIG_HOME
+
 static CONFIG_PATH: &str = "/home/tmforshaw/.config/dotfile-templater/config.toml";
 pub const FUNCTION_CHAR: char = '@';
 
