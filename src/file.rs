@@ -25,9 +25,9 @@ impl<'a> From<regex::Match<'a>> for MatchedText {
 }
 
 pub(crate) fn open_file<S: AsRef<str>>(path: S) -> String {
+    // Open file and copy contents
     let mut config_file = File::open(path.as_ref()).unwrap();
     let mut contents = String::new();
-
     config_file.read_to_string(&mut contents).unwrap();
     contents
 }
@@ -36,21 +36,17 @@ pub(crate) fn write_to_file<S: AsRef<str>>(
     path: S,
     replace_text: MatchedText,
 ) -> Result<(), DotfilesError> {
+    // Copy the file before modifications
     let mut config_file = File::open(path.as_ref()).unwrap();
     let mut contents = String::new();
-
     config_file.read_to_string(&mut contents).unwrap();
 
-    println!(
-        "{:?}",
-        &contents.chars().collect::<Vec<_>>()[replace_text.range.clone()]
-    );
-
-    // let mut chars = contents.chars().collect::<Vec<_>>();
-    // chars[replace_text.range] = &replace_text.text.chars().collect::<Vec<_>>();
-
+    // Replace the region with the new text
     contents.replace_range(replace_text.range, replace_text.text.as_str());
-    println!("{contents}");
+
+    // Write the changes to the file
+    let mut config_file = File::create(path.as_ref()).unwrap();
+    config_file.write_all(contents.as_bytes()).unwrap();
 
     Ok(())
 }
@@ -61,27 +57,30 @@ pub(crate) fn modify_files() -> Result<(), DotfilesError> {
 
         // Find the parts which need to be replaced
         let marker_regex_string = file_config.comment_char.to_string().repeat(3);
-        let marker_regex =
-            Regex::new(format!("(?m)(?<before>^.*){marker_regex_string}(?<after>.*)$").as_str())?;
+        let marker_regex = Regex::new(format!("(?m)(^.*){marker_regex_string}(.*)$").as_str())?;
 
+        // Find the lines which have the marker on them, and split the line into actual code and template code
         for captures in marker_regex.captures_iter(&file) {
-            let Some(before) = captures.get(1) else {
+            let Some(actual_text) = captures.get(1) else {
                 return Err(DotfilesError::CaptureFail {
                     captures: format!("{captures:?}"),
                     index: 1,
                 });
             };
 
-            let Some(after) = captures.get(2) else {
+            let Some(template_text) = captures.get(2) else {
                 return Err(DotfilesError::CaptureFail {
                     captures: format!("{captures:?}"),
                     index: 2,
                 });
             };
 
-            println!("{before:?}\t\t{after:?}");
-
-            parse_and_run_function(file_config.file.to_string(), after.into(), before.into())?;
+            // Parse the template code, and modify the actual_text
+            parse_and_run_function(
+                file_config.file.to_string(),
+                template_text.into(),
+                actual_text.into(),
+            )?;
         }
     }
 

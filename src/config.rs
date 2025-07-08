@@ -25,9 +25,6 @@ lazy_static! {
 }
 
 fn parse_config() -> Result<Config, DotfilesError> {
-    let config = toml::from_str(open_file(CONFIG_PATH).as_str())?;
-
-    println!("{config:#?}");
-
-    Ok(config)
+    // Read the TOML config into a Config struct
+    Ok(toml::from_str(open_file(CONFIG_PATH).as_str())?)
 }

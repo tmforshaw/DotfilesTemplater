@@ -5,7 +5,7 @@ pub(crate) enum DotfilesError {
     #[error("TOML could not be read to string: {0}")]
     TomlReadError(#[from] toml::de::Error),
 
-    #[error("Regex failed to be created")]
+    #[error("Regex failed to be created: {0}")]
     RegexFail(#[from] regex::Error),
 
     #[error("Regex '{regex_str}' did not match anything in haystack: {hay}")]
