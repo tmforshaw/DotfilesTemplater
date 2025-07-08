@@ -146,7 +146,7 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
     let replace_text = MatchedText {
         range: (text.range.start + text_match.range.start)
             ..(text.range.start + text_match.range.end),
-        text: parse_argument(args[1])?,
+        text: parse_argument(args[1].trim_matches('\"'))?,
     };
 
     // TODO This is so that the file length and locations don't change (Should fix this issue at some point)

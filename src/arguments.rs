@@ -1,4 +1,4 @@
-use crate::{config::CONFIG, errors::DotfilesError};
+use crate::{config::CONFIG, errors::DotfilesError, functions::HEX_COLOUR_REGEX};
 
 pub fn parse_argument(arg: &str) -> Result<String, DotfilesError> {
     // Get the current theme
@@ -15,6 +15,10 @@ pub fn parse_argument(arg: &str) -> Result<String, DotfilesError> {
     };
 
     let Some(value) = current_theme.get(arg) else {
+        if (*HEX_COLOUR_REGEX).clone()?.is_match(arg) {
+            return Ok(arg.to_string());
+        }
+
         return Err(DotfilesError::ArgNotFound {
             arg: arg.to_string(),
             theme_hashmap: current_theme.clone(),
