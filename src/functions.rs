@@ -160,7 +160,7 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
     }
 
     println!(
-        "\t\t{}:  {}  -->  {}",
+        "\t\t{}:  {}  -->  {}\n",
         text.text.trim(),
         text_match.text,
         replace_text.text
