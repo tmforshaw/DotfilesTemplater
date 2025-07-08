@@ -7,18 +7,18 @@ use regex::Regex;
 
 use crate::config::{CONFIG, FileConfig};
 use crate::errors::DotfilesError;
-use crate::functions::parse_config_functions;
+use crate::functions::parse_and_run_function;
 
 #[derive(Debug, Clone)]
 pub(crate) struct MatchedText {
-    pub(crate) _range: Range<usize>,
+    pub(crate) range: Range<usize>,
     pub(crate) text: String,
 }
 
 impl<'a> From<regex::Match<'a>> for MatchedText {
     fn from(value: regex::Match) -> Self {
         Self {
-            _range: value.range(),
+            range: value.range(),
             text: value.as_str().to_string(),
         }
     }
@@ -42,7 +42,7 @@ pub(crate) fn modify_files() -> Result<(), DotfilesError> {
         let marker_regex =
             Regex::new(format!("(?m)(?<before>^.*){marker_regex_string}(?<after>.*)$").as_str())?;
 
-        for captures in marker_regex.captures_iter(file.as_str()) {
+        for captures in marker_regex.captures_iter(&file) {
             let Some(before) = captures.get(1) else {
                 return Err(DotfilesError::CaptureFail {
                     captures: format!("{captures:?}"),
@@ -57,7 +57,7 @@ pub(crate) fn modify_files() -> Result<(), DotfilesError> {
                 });
             };
 
-            parse_config_functions(before.into(), after.into())?;
+            parse_and_run_function(file_config.file.to_string(), after.into(), before.into())?;
         }
     }
 
