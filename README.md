@@ -53,12 +53,12 @@ fg_col = "#9999F8"
 ```css
 test = "This wont be configured" % Even if there are comments
 
-$primary: #9549FF; %%% @replace-col(primary_col)
+$primary: rgb(9549FF); %%% @replace-pattern('rgb\([A-Za-z\d]{6}\)', primary_col, '[A-Za-z\d]{6}')  <-- Replaces the Hex code with the primary_col, applies the 2nd pattern to primary_col after parsing, e.g: #123456 -> 123456
 $secondary: #FF4958; %%% @replace-col(secondary_col)
-$tertiary: #B3FF49; %%% @replace-col(tertiary_col)
+$tertiary: #B3FF49 #B3FF49; %%% @replace-col(tertiary_col) @replace-col(bg_col)  <-- Replaces the colours in order
 $quaternary: #49FFF0; %%% @replace-col(quaternary_col)
 
-$background: #1A1B26; %%% @replace('#[\w\d]{6}', bg_col) <-- Equivalent to @replace-col(bg_col)
+$background: #1A1B26; %%% @replace('#[A-Za-z\d]{6}', bg_col) <-- Equivalent to @replace-col(bg_col)
 $background-lighter: #24283B; %%% @replace-col(bg_col_light)
 $foreground: #A9B1D6; %%% @replace-col(fg_col)
 ```
