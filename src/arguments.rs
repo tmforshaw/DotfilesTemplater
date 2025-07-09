@@ -1,4 +1,4 @@
-use crate::{config::CONFIG, errors::DotfilesError, functions::HEX_COLOUR_REGEX};
+use crate::{config::CONFIG, errors::DotfilesError, regex::HEX_COLOUR_REGEX};
 
 pub fn parse_argument(arg: &str) -> Result<String, DotfilesError> {
     // Get the current theme

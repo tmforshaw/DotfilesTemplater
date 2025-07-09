@@ -11,6 +11,7 @@ mod config;
 mod errors;
 mod file;
 mod functions;
+mod regex;
 
 fn main() {
     // Modify the files accordinig to the template text, then print any errors that occur
