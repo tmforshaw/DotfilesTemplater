@@ -159,15 +159,18 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
         });
     }
 
-    println!(
-        "\t\t{}:  {}  -->  {}\n",
-        text.text.trim(),
-        text_match.text,
-        replace_text.text
-    );
+    if text_match.text != replace_text.text {
+        println!(
+            "\t\t{}:\n\t\t{}  -->  {}",
+            text.text.trim(),
+            text_match.text,
+            replace_text.text
+        );
 
-    // Replace the text in the file
-    write_to_file(file_path, replace_text)?;
+        // Replace the text in the file
+        write_to_file(file_path, replace_text)?;
+    }
+    println!();
 
     Ok(())
 }
