@@ -1,7 +1,8 @@
 theme = "purple-night"
 marker_repetition_num = 3
 files = [
-  {file = "./examples/test.conf", comment_char = "%"},
+  {file = "test/test.conf", marker_char = "%"},
+  {file = "another/another.rs", marker_char = "//"},
 ]
 
 [[themes]]

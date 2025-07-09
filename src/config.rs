@@ -42,7 +42,7 @@ impl Config {
 #[derive(Deserialize, Debug, Clone)]
 pub struct FileConfig {
     pub file: String,
-    pub comment_char: String,
+    pub marker_char: String,
 }
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(parse_config);

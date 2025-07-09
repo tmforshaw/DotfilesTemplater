@@ -4,6 +4,7 @@
 #![warn(clippy::expect_used)]
 
 // TODO Need to allow colour changing without # for HyprLand
+// TODO Add Replace function which applies pattern to the keyword/value
 
 mod arguments;
 mod config;

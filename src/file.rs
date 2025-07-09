@@ -71,7 +71,7 @@ pub fn modify_files() -> Result<(), DotfilesError> {
 
         // Find the parts which need to be replaced
         let marker_regex_string = file_config
-            .comment_char
+            .marker_char
             .to_string()
             .repeat(CONFIG.marker_repetition_num);
         let marker_regex = Regex::new(format!("(?m)(^.*){marker_regex_string}(.*)$").as_str())?;
