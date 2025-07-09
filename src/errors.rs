@@ -19,11 +19,10 @@ pub enum DotfilesError {
     #[error("Regex capture at index {index} could not be found: {captures}")]
     CaptureFail { captures: String, index: usize },
 
-    #[error("Function '{name}' needs {needed} args, found {found}: {args:?}")]
+    #[error("Function '{name}' needs {needed} args, found {}: {args:?}", args.len())]
     FuncArgumentError {
         name: String,
         needed: usize,
-        found: usize,
         args: Vec<String>,
     },
 
