@@ -63,5 +63,5 @@ $background-lighter: #24283B; %%% @replace-col(bg_col_light)
 $foreground: #A9B1D6; %%% @replace-col(fg_col)
 ```
 
-### Running
+## Running
 After downloading this folder, and installing ``rustc`` or ```rustup```, simply running ```cargo r``` will be enough to modify your files, so long as you have configured the TOML file correctly. Errors will be printed to the terminal.
