@@ -7,7 +7,8 @@ use std::sync::LazyLock;
 
 pub static FUNCTION_REGEX: LazyLock<Result<Regex, DotfilesError>> = LazyLock::new(|| {
     Ok(Regex::new(
-        format!("{FUNCTION_CHAR}(?<name>[a-zA-Z][\\w\\-]*)(?<args>(?:\\\\.|[^)])+\\))").as_str(),
+        format!("{FUNCTION_CHAR}(?<name>[a-zA-Z][A-Za-z\\d_\\-]*)(?<args>(?:\\\\.|[^)])+\\))")
+            .as_str(),
     )?)
 });
 pub static PATTERN_REGEX: LazyLock<Result<Regex, DotfilesError>> =
