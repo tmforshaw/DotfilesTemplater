@@ -57,29 +57,13 @@ pub fn run_function(
     file_path: String,
     text: MatchedText,
 ) -> Result<(), DotfilesError> {
-    let pattern_regex = (*PATTERN_REGEX).clone()?;
-    let string_or_keyword_regex = (*STRING_OR_KEYWORD_REGEX).clone()?;
-
     #[allow(clippy::single_match)]
     match name {
         // Requires: pattern, replace-string
         "replace" => {
             if args.len() == 2 {
-                // First argument is a pattern
-                if !pattern_regex.is_match(args[0]) {
-                    return Err(DotfilesError::RegexMatchError {
-                        regex_str: pattern_regex.to_string(),
-                        hay: args[0].to_string(),
-                    });
-                }
-
-                // Second argument is a keyword or string
-                if !string_or_keyword_regex.is_match(args[1]) {
-                    return Err(DotfilesError::RegexMatchError {
-                        regex_str: string_or_keyword_regex.to_string(),
-                        hay: args[1].to_string(),
-                    });
-                }
+                matches_pattern(args[0])?; // First argument is a pattern
+                matches_keyword_or_string(args[1])?; // Second argument is a keyword or string
 
                 // Run the function
                 replace_fn(file_path, args, text)?;
@@ -96,12 +80,7 @@ pub fn run_function(
         "replace-col" => {
             if args.len() == 1 {
                 // First argument is a keyword or string
-                if !string_or_keyword_regex.is_match(args[0]) {
-                    return Err(DotfilesError::RegexMatchError {
-                        regex_str: string_or_keyword_regex.to_string(),
-                        hay: args[0].to_string(),
-                    });
-                }
+                matches_keyword_or_string(args[0])?;
 
                 // Run the function
                 replace_fn(
@@ -111,6 +90,8 @@ pub fn run_function(
                 )?;
             }
         }
+        // // Replace function which also puts a pattern onto the text which is going to replace
+        // "replace-pattern" => if args == 3 {},
         f => {
             eprintln!("Function '{f}' does not exist");
         }
@@ -173,4 +154,30 @@ fn replace_fn(file_path: String, args: &[&str], text: MatchedText) -> Result<(),
     println!();
 
     Ok(())
+}
+
+fn matches_pattern(arg: &str) -> Result<(), DotfilesError> {
+    let pattern_regex = (*PATTERN_REGEX).clone()?;
+
+    if pattern_regex.is_match(arg) {
+        Ok(())
+    } else {
+        Err(DotfilesError::RegexMatchError {
+            regex_str: pattern_regex.to_string(),
+            hay: arg.to_string(),
+        })
+    }
+}
+
+fn matches_keyword_or_string(arg: &str) -> Result<(), DotfilesError> {
+    let string_or_keyword_regex = (*STRING_OR_KEYWORD_REGEX).clone()?;
+
+    if string_or_keyword_regex.is_match(arg) {
+        Ok(())
+    } else {
+        Err(DotfilesError::RegexMatchError {
+            regex_str: string_or_keyword_regex.to_string(),
+            hay: arg.to_string(),
+        })
+    }
 }

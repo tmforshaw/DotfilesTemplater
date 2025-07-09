@@ -14,6 +14,7 @@ pub fn parse_argument(arg: &str) -> Result<String, DotfilesError> {
         });
     };
 
+    // See if the agument is a variable within this theme, if it isn't then check if it is a HEX colour code
     let Some(value) = current_theme.get(arg) else {
         if (*HEX_COLOUR_REGEX).clone()?.is_match(arg) {
             return Ok(arg.to_string());
