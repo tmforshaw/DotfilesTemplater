@@ -36,8 +36,6 @@ pub fn parse_and_run_function(
         })
         .collect::<Vec<_>>();
 
-    // println!("\t{functions:?}");
-
     // Run each function on the specified file
     for (i, (name, args)) in functions.iter().enumerate() {
         run_function(name, args, file_path.to_string(), actual_text, i)?;
