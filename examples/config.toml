@@ -1,0 +1,29 @@
+theme = "purple-night"
+marker_repetition_num = 3
+files = [
+  {file = "./examples/test.conf", comment_char = "%"},
+]
+
+[[themes]]
+name = "purple-night"
+
+primary_col = "#9549FF"
+secondary_col = "#FF4958"
+tertiary_col = "#B3FF49"
+quaternary_col = "#49FFF0"
+
+bg_col = "#1A1B26"
+bg_col_light = "#24283B"
+fg_col = "#A9B1D6"
+
+[[themes]]
+name = "blue-bannana"
+
+primary_col = "#48FFD1"
+secondary_col = "#4876FF"
+tertiary_col = "#FF4876"
+quaternary_col = "#FFD148"
+
+bg_col = "#0A0A40"
+bg_col_light = "#11116C"
+fg_col = "#9999F8"
