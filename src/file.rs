@@ -93,7 +93,11 @@ pub fn modify_files() -> Result<(), DotfilesError> {
             };
 
             // Parse the template code, and modify the actual_text
-            parse_and_run_function(path_str.clone(), template_text.into(), &actual_text.into())?;
+            parse_and_run_function(
+                path_str.as_str(),
+                &template_text.into(),
+                &actual_text.into(),
+            )?;
         }
     }
 

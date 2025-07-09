@@ -4,38 +4,44 @@ use crate::arguments::parse_argument;
 use crate::errors::DotfilesError;
 use crate::file::{MatchedText, write_to_file};
 use crate::regex::{
-    FUNCTION_REGEX, HEX_COLOUR_REGEX, get_single_match, matches_keyword_or_string, matches_pattern,
+    FUNCTION_REGEX, HEX_COLOUR_REGEX, get_nth_match, get_single_match, matches_keyword_or_string,
+    matches_pattern,
 };
 
 pub fn parse_and_run_function(
-    file_path: String,
-    function_code_text: MatchedText,
+    file_path: &str,
+    function_code_text: &MatchedText,
     actual_text: &MatchedText,
 ) -> Result<(), DotfilesError> {
     // Match the first function pattern // TODO Attempt to allow multiple functions on the same line
-    let Some(function_match) = FUNCTION_REGEX.clone()?.captures(&function_code_text.text) else {
-        return Err(DotfilesError::RegexMatchError {
-            regex_str: FUNCTION_REGEX.clone()?.to_string(),
-            hay: function_code_text.text,
-        });
-    };
+    let functions = FUNCTION_REGEX
+        .clone()?
+        .captures_iter(&function_code_text.text)
+        .map(|function_captures| {
+            // Extract the groups
+            let (_, [name, args]) = function_captures.extract();
 
-    // Extract the groups
-    let (_, [name, args]) = function_match.extract();
+            // Remove the brackets around the arguments, then split them based on commas
+            let args = args
+                .trim_start_matches('(')
+                .trim_end_matches(')')
+                .split(',')
+                .map(str::trim) // Make sure the remove excess whitespace on the arguments
+                .collect::<Vec<&str>>();
 
-    // Remove the brackets around the arguments, then split them based on commas
-    let args = args
-        .trim_start_matches('(')
-        .trim_end_matches(')')
-        .split(',')
-        .map(str::trim) // Make sure the remove excess whitespace on the arguments
-        .collect::<Vec<&str>>();
+            // Print the function and its arguments (This will help to track what is happening)
+            println!("\t{name}({})", args.join(", "));
 
-    // Print the function and its arguments (This will help to track what is happening)
-    println!("\t{name}({})", args.join(", "));
+            (name.to_string(), args)
+        })
+        .collect::<Vec<_>>();
 
-    // Run the function on the specified file
-    run_function(name, &args, file_path, actual_text)?;
+    // println!("\t{functions:?}");
+
+    // Run each function on the specified file
+    for (i, (name, args)) in functions.iter().enumerate() {
+        run_function(name, args, file_path.to_string(), actual_text, i)?;
+    }
 
     Ok(())
 }
@@ -45,8 +51,8 @@ pub fn run_function(
     args: &[&str],
     file_path: String,
     text: &MatchedText,
+    index_to_match: usize,
 ) -> Result<(), DotfilesError> {
-    #[allow(clippy::single_match)]
     match name {
         // Requires: pattern, replace-string
         "replace" => {
@@ -55,7 +61,7 @@ pub fn run_function(
                 matches_keyword_or_string(args[1])?; // Second argument is a keyword or string
 
                 // Run the function
-                replace_fn(file_path, args, text)?;
+                replace_fn(file_path, args, text, index_to_match)?;
             } else {
                 // Incorrect number of arguments
                 return Err(DotfilesError::FuncArgumentError {
@@ -65,16 +71,17 @@ pub fn run_function(
                 });
             }
         }
+        // R
         "replace-col" => {
             if args.len() == 1 {
-                // First argument is a keyword or string
-                matches_keyword_or_string(args[0])?;
+                matches_keyword_or_string(args[0])?; // First argument is a keyword or string
 
                 // Run the function
                 replace_fn(
                     file_path,
                     &[HEX_COLOUR_REGEX.clone()?.as_str(), args[0]],
                     text,
+                    index_to_match,
                 )?;
             } else {
                 // Incorrect number of arguments
@@ -93,7 +100,7 @@ pub fn run_function(
                 matches_pattern(args[2])?; // Third argument is a pattern
 
                 // Run the function
-                replace_fn(file_path, args, text)?;
+                replace_fn(file_path, args, text, index_to_match)?;
             } else {
                 // Incorrect number of arguments
                 return Err(DotfilesError::FuncArgumentError {
@@ -103,7 +110,7 @@ pub fn run_function(
                 });
             }
         }
-        // Replace function which also puts a pattern onto the text which is going to replace, and applies that same pattern to the text_to_replace (so they're the same length)
+        // Replace function which also puts a pattern onto the text which is going to replace, and applies that same pattern to the text_to_replace (so they're the same length), Also the initial pattern to match is the colour pattern
         "replace-pattern-col" => {
             if args.len() == 2 {
                 matches_keyword_or_string(args[0])?; // First argument is a keyword or string
@@ -114,6 +121,7 @@ pub fn run_function(
                     file_path,
                     &[HEX_COLOUR_REGEX.clone()?.as_str(), args[0], args[1]],
                     text,
+                    index_to_match,
                 )?;
             } else {
                 // Incorrect number of arguments
@@ -136,15 +144,20 @@ pub fn run_function(
 // ---------------------------------- Code to perform each function call on the specified file -----------------------------------
 // -------------------------------------------------------------------------------------------------------------------------------
 
-fn replace_fn(file_path: String, args: &[&str], text: &MatchedText) -> Result<(), DotfilesError> {
+fn replace_fn(
+    file_path: String,
+    args: &[&str],
+    text: &MatchedText,
+    index_to_match: usize,
+) -> Result<(), DotfilesError> {
     // Parse the 2nd argument, to convert keywords into strings
     let mut keyword_as_string = parse_argument(args[1].trim_matches('\"'))?;
 
     // Remove the surrounding apostrophes from the pattern, then turn it into a Regex
     let replace_pattern_regex = Regex::new(args[0].trim_matches('\''))?;
 
-    // Match the text with this pattern
-    let mut text_to_replace = get_single_match(&replace_pattern_regex, text.clone())?;
+    // Match the text with this pattern (Choosing the nth match)
+    let mut text_to_replace = get_nth_match(&replace_pattern_regex, text.clone(), index_to_match)?;
 
     // Check if there is a pattern to apply to text_to_replace and the keyword_as_string
     if let Some(&pattern_str_2) = args.get(2) {
@@ -157,6 +170,7 @@ fn replace_fn(file_path: String, args: &[&str], text: &MatchedText) -> Result<()
         // Shrink the text_to_replace to fit the new pattern
         text_to_replace = get_single_match(&keyword_pattern_regex, text_to_replace.clone())?;
 
+        // Perform the pattern matching on the keyword as well, giving a dummy range so the function signature is correct
         let keyword_matched_text = MatchedText {
             range: 0..1, // Not used
             text: keyword_as_string,
@@ -172,6 +186,7 @@ fn replace_fn(file_path: String, args: &[&str], text: &MatchedText) -> Result<()
         });
     }
 
+    // Only replace if the text has changed
     if text_to_replace.text != keyword_as_string {
         println!(
             "\t\t'{}'\n\t\t{}  -->  {}",
@@ -180,13 +195,14 @@ fn replace_fn(file_path: String, args: &[&str], text: &MatchedText) -> Result<()
             keyword_as_string
         );
 
-        let replacement_text = MatchedText {
-            range: text_to_replace.range,
-            text: keyword_as_string,
-        };
-
         // Replace the text in the file
-        write_to_file(file_path, replacement_text)?;
+        write_to_file(
+            file_path,
+            MatchedText {
+                range: text_to_replace.range,
+                text: keyword_as_string,
+            },
+        )?;
     }
     println!();
 

@@ -70,6 +70,43 @@ pub fn get_single_match(regex: &Regex, text: MatchedText) -> Result<MatchedText,
     Ok(matched_text)
 }
 
+pub fn get_nth_match(
+    regex: &Regex,
+    text: MatchedText,
+    n: usize,
+) -> Result<MatchedText, DotfilesError> {
+    // Get the capture for this regex and text
+    let Some(captures) = regex.captures_iter(&text.text).nth(n) else {
+        return if n == 0 {
+            Err(DotfilesError::RegexMatchError {
+                regex_str: regex.to_string(),
+                hay: text.text,
+            })
+        } else {
+            Err(DotfilesError::RegexNthMatchError {
+                regex_str: regex.to_string(),
+                hay: text.text,
+                capture_index: n,
+            })
+        };
+    };
+
+    // Exit function if the captured text cannot be extracted into a Match variable
+    let Some(regex_match) = captures.get(0) else {
+        return Err(DotfilesError::CaptureFail {
+            captures: format!("{captures:?}"),
+            index: 0,
+        });
+    };
+
+    // Adjust the range to be with the respect to the whole file (given that the input MatchedText is also with respect to the whole file)
+    let matched_text = MatchedText {
+        range: (text.range.start + regex_match.start())..(text.range.start + regex_match.end()),
+        text: regex_match.as_str().to_string(),
+    };
+
+    Ok(matched_text)
+}
 #[allow(dead_code)]
 fn test_fn_print_chars(
     file_path: String,

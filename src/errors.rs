@@ -16,6 +16,13 @@ pub enum DotfilesError {
     #[error("Regex '{regex_str}' did not match anything in haystack: {hay}")]
     RegexMatchError { regex_str: String, hay: String },
 
+    #[error("Regex '{regex_str}' did not produce {} captures: {hay}", capture_index + 1)]
+    RegexNthMatchError {
+        regex_str: String,
+        hay: String,
+        capture_index: usize,
+    },
+
     #[error("Regex capture at index {index} could not be found: {captures}")]
     CaptureFail { captures: String, index: usize },
 
